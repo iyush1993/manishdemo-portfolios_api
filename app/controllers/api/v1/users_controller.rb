@@ -3,13 +3,19 @@ module Api
     class UsersController < ApplicationController
 
       def sign_up
-        @user = User.create(user_params)
+        @user = User.new(user_params)
+
         if @user.valid?
+          @user.save
           token = encode_token({user_id: @user.id})
           render json: {user: @user, token: token}
         else
           render json: {error: "Invalid username or password"}
         end
+
+        rescue StandardError => authentication_error
+          render json: {error: "Bad arguments during sign up"}
+
       end
 
       def sign_in
@@ -41,9 +47,10 @@ module Api
                 "token": token,
                 "email": @user.email,
                 "name": "#{@user.first_name} #{@user.last_name}",
-                "country":  @user.country},
+                "country":  @user.country,
                 "createdAt": @user.created_at,
                 "updatedAt": @user.updated_at
+              }
             }
           }
 
@@ -52,13 +59,17 @@ module Api
           render json: {error: "Invalid email or password"}
         end
 
-      rescue StandardError => authentication_error
-        render json: {error: "Bad arguments"}
+        rescue StandardError => authentication_error
+          render json: {error: "Bad arguments during sign in"}
       end
 
       private
       def user_params
-        params.permit(:first_name, :last_name, :email, :country)
+        params.require(:first_name)
+        params.require(:last_name)
+        params.require(:email)
+        params.require(:password)
+        params.permit(:first_name, :last_name, :email, :password, :country)
       end
 
 
