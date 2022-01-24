@@ -15,7 +15,6 @@ module Api
 
         rescue StandardError => authentication_error
           render json: {error: "Bad arguments during sign up"}
-
       end
 
       def sign_in
