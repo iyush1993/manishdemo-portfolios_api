@@ -6,7 +6,9 @@ scope module: :v1 do
   # get 'projects/create'
   get 'v1/projects', to: "projects#index"
   post 'v1/projects', to: "projects#create"
+  get 'v1/projects/my_projects', to: "projects#index_myprojects"
   get 'v1/projects/:id', to: "projects#show"
+
 
   # get 'projects/update'
   # get 'projects/delete'

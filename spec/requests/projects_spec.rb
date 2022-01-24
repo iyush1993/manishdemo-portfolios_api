@@ -4,15 +4,18 @@ RSpec.describe "Projects", type: :request do
 
   before(:all) do
     @user1 = User.create!(first_name: "manish",last_name: "Shrestha", email: "mshr1@example.com", password: "changeme")
+    @user2 = User.create!(first_name: "prabin",last_name: "Silwal", email: "psi@example.com", password: "changeme")
     @project1 = Project.create!(title: "Project title A", project_type: 0, location: "locationA", thumbnail: "thumbnailA",
                                user_id: @user1.id)
     @project2 = Project.create!(title: "Project title B", project_type: 1, location: "locationB", thumbnail: "thumbnailB",
                                user_id: @user1.id)
+    @project3 = Project.create!(title: "Project title C", project_type: 1, location: "locationC", thumbnail: "thumbnailC",
+                                user_id: @user2.id)
   end
 
 
 
-  describe "GET /api/v1/create, Create a Project" do
+  describe "POST /api/v1/projects, Create a Project" do
     it "returns unauthorised response code, when auth token is not presented" do
       post "/api/v1/projects"
       expect(response).to have_http_status(:unauthorized)
@@ -37,7 +40,7 @@ RSpec.describe "Projects", type: :request do
 
   end
 
-  describe "GET /api/v1/index, Get all projects" do
+  describe "GET /api/v1/projects, Get all projects" do
     it "returns http success along with all the projects" do
       get "/api/v1/projects"
       expect(response).to have_http_status(:success)
@@ -46,6 +49,22 @@ RSpec.describe "Projects", type: :request do
       expect(response.body).to include("Project title A")
       expect(response.body).to include("Project title B")
     end
+  end
+
+  describe "GET /api/v1/projects/my_projects, Get all owned projects" do
+    it "returns http success along with all the owned projects" do
+      token = JWT.encode({user_id: @user1.id}, 'yourSecret')  # TODO: find better way
+      headers = { "Authorization" => "Bearer #{token}" }
+
+      get "/api/v1/projects/my_projects", :headers => headers
+      expect(response).to have_http_status(:success)
+      expect(response.body).to include("data")
+      expect(response.content_type).to include("application/json")
+      expect(response.body).to include("Project title A")
+      expect(response.body).to include("Project title B")
+    end
+
+    it "returns error, if not logged in"
   end
 
   describe "GET /api/v1/projects/:id, Get a project" do
@@ -62,7 +81,7 @@ RSpec.describe "Projects", type: :request do
       expect(response.body).to include("Project does not exists")
     end
   end
-  
+
   #
   # describe "GET /update" do
   #   it "returns http success" do
@@ -81,7 +100,9 @@ RSpec.describe "Projects", type: :request do
   after(:context) do
     @project1.destroy
     @project2.destroy
+    @project3.destroy
     @user1.destroy
+    @user2.destroy
   end
 
 end

@@ -1,7 +1,7 @@
 module Api
   module V1
     class ProjectsController < ApplicationController
-      before_action :authorized, only: [:create]
+      before_action :authorized, only: [:create,:index_myprojects]
 
       def create
         project = Project.new(project_params)
@@ -41,10 +41,10 @@ module Api
 
       def index
         @projects = Project.all
-        projects_modified = []
+        data = []
 
         @projects.each do |project|
-          projects_modified.append(
+          data.append(
             { "id": project.id,
               "type": "project",
               "attributes": {
@@ -60,12 +60,31 @@ module Api
             })
         end
 
-        resp = {
-          "data": projects_modified
-        }
+        render json: {data: data}
+      end
 
+      def index_myprojects
+        @projects = @user.projects
+        data = []
 
-        render json: resp
+        @projects.each do |project|
+          data.append(
+            { "id": project.id,
+              "type": "project",
+              "attributes": {
+                "title": project.title,
+                "thumbnail": project.thumbnail,
+                "description": project.description,
+                "location": project.location,
+                "type": project.project_type,
+                "ownerName": "#{project.user.first_name} #{project.user.last_name}",
+                "createdAt": project.created_at,
+                "updatedAt": project.updated_at
+              }
+            })
+        end
+
+        render json: {data: data}
       end
 
       def show
@@ -90,6 +109,8 @@ module Api
           render json: {error: "Project does not exists"}
         end
       end
+
+
 
       def update
       end
